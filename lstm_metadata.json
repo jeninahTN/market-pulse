@@ -1,0 +1,33 @@
+{
+  "target_column": "target_price_t_plus_1",
+  "feature_columns": [
+    "temperature_2m",
+    "precipitation",
+    "humidity_2m",
+    "sentiment_score",
+    "price_lag_1",
+    "price_lag_2",
+    "price_lag_3",
+    "price_lag_4",
+    "price_lag_5",
+    "price_lag_6",
+    "price_lag_7"
+  ],
+  "scaler_columns": [
+    "target_price_t_plus_1",
+    "temperature_2m",
+    "precipitation",
+    "humidity_2m",
+    "sentiment_score",
+    "price_lag_1",
+    "price_lag_2",
+    "price_lag_3",
+    "price_lag_4",
+    "price_lag_5",
+    "price_lag_6",
+    "price_lag_7"
+  ],
+  "model_type": "lstm_tabular_seq1",
+  "val_ratio": 0.15,
+  "test_ratio": 0.15
+}

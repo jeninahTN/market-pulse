@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="offline-hero"
+    style="position: relative; height: 300px; background: linear-gradient(135deg, #33c481 0%, #1f6f4a 55%, #0f2f23 100%); margin-bottom: 40px; overflow: hidden;">
+    <div style="position: absolute; inset: 0; background:
+        radial-gradient(circle at 15% 20%, rgba(255,255,255,0.18) 0, rgba(255,255,255,0) 28%),
+        radial-gradient(circle at 85% 15%, rgba(255,255,255,0.10) 0, rgba(255,255,255,0) 22%),
+        radial-gradient(circle at 70% 80%, rgba(255,255,255,0.08) 0, rgba(255,255,255,0) 30%);">
+    </div>
+    <div class="offline-hero-content"
+        style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 40px 24px;">
+        <div class="container">
+            <h1 style="color: white; font-size: 2.5rem; margin-bottom: 10px;" data-i18n="offline_hero_title">Your Market
+                Prices, Even Without Internet.</h1>
+            <p style="color: rgba(255,255,255,0.9); margin-bottom: 20px;" data-i18n="offline_hero_desc">Add Market Pulse
+                to your phone's home screen for faster, offline access.</p>
+            <button class="btn-primary" onclick="alert('Tap the menu button and select Add to Home Screen')"
+                data-i18n="btn_add_home">Add to My Home Screen</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <h2 style="text-align: center; margin-bottom: 30px;" data-i18n="why_add_title">Why Add to Home Screen?</h2>
+
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 60px;">
+        <div class="card" style="text-align: center; background: var(--bg-light); border: 1px solid var(--border-color);">
+            <div
+                style="background: var(--bg-success-tint); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 1px solid var(--border-color);">
+                <i class="fas fa-cloud-slash text-success" style="font-size: 1.5rem;"></i>
+            </div>
+            <h3 data-i18n="feat_offline_title">Offline Access</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px;" data-i18n="feat_offline_desc">See
+                your last saved price predictions when you have no signal.</p>
+        </div>
+        <div class="card" style="text-align: center; background: var(--bg-light); border: 1px solid var(--border-color);">
+            <div
+                style="background: var(--bg-success-tint); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 1px solid var(--border-color);">
+                <i class="fas fa-rocket text-success" style="font-size: 1.5rem;"></i>
+            </div>
+            <h3 data-i18n="feat_fast_title">Fast & Light</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px;" data-i18n="feat_fast_desc">The app
+                opens instantly and uses very little data.</p>
+        </div>
+        <div class="card" style="text-align: center; background: var(--bg-light); border: 1px solid var(--border-color);">
+            <div
+                style="background: var(--bg-success-tint); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 1px solid var(--border-color);">
+                <i class="fas fa-hand-pointer text-success" style="font-size: 1.5rem;"></i>
+            </div>
+            <h3 data-i18n="feat_easy_title">Easy Access</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px;" data-i18n="feat_easy_desc">Open
+                Market Pulse with one tap from your home screen.</p>
+        </div>
+    </div>
+
+    <h2 style="text-align: center; margin-bottom: 30px;" data-i18n="guide_title">Simple 3-Step Guide</h2>
+
+    <div class="offline-steps" style="display: flex; justify-content: center; gap: 40px; text-align: center; flex-wrap: wrap;">
+        <div style="max-width: 200px;">
+            <div
+                style="background: #eee; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 1.5rem; color: #888;">
+                <i class="fas fa-ellipsis-v"></i>
+            </div>
+            <h4 data-i18n="step_1_title">1. Open Menu</h4>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;" data-i18n="step_1_desc">Tap the
+                menu button (three dots) in your browser.</p>
+        </div>
+        <div style="max-width: 200px;">
+            <div
+                style="background: var(--bg-light); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 1.5rem; color: var(--text-muted); border: 1px solid var(--border-color);">
+                <i class="fas fa-plus-square"></i>
+            </div>
+            <h4 data-i18n="step_2_title">2. Select Add</h4>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;" data-i18n="step_2_desc">Find and
+                tap on 'Add to Home Screen' or 'Install app'.</p>
+        </div>
+        <div style="max-width: 200px;">
+            <div
+                style="background: var(--bg-light); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 1.5rem; color: var(--text-muted); border: 1px solid var(--border-color);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h4 data-i18n="step_3_title">3. Confirm</h4>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;" data-i18n="step_3_desc">Follow the
+                prompt and find the app icon on your screen.</p>
+        </div>
+    </div>
+
+    <div style="margin-top: 60px;">
+        <h2 style="text-align: center; margin-bottom: 15px;">Saved Predictions on This Device</h2>
+        <p style="text-align: center; color: var(--text-muted); max-width: 700px; margin: 0 auto 24px auto;">
+            When you have no connection, Market Pulse will show the latest saved crop and region prediction that has already been synced to your browser.
+        </p>
+        <div id="offline-cached-prediction"></div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,279 @@
+﻿{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div style="display: flex; justify-content: space-between; align-items: start; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;">
+        <div>
+            <h1 style="font-size: 2rem; margin-bottom: 8px; color: var(--text-dark);">Translation QA Checklist</h1>
+            <p style="color: var(--text-muted); margin: 0; max-width: 800px;">
+                Review each key across all languages and mark signoff once verified by a native speaker.
+                Progress is stored in this browser so reviewers can continue later.
+            </p>
+        </div>
+        <a href="/help" class="btn-primary" style="padding: 10px 18px; border-radius: 999px; text-decoration: none;">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i>Back to Help
+        </a>
+    </div>
+
+    <div class="card" style="margin-bottom: 18px; padding: 16px; border: 1px solid var(--border-color); background: var(--bg-light);">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;" id="qa-summary"></div>
+        <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <label style="display: inline-flex; align-items: center; gap: 6px; color: var(--text-dark);">
+                <input type="checkbox" id="filter-missing"> Show missing only
+            </label>
+            <label style="display: inline-flex; align-items: center; gap: 6px; color: var(--text-dark);">
+                <input type="checkbox" id="filter-same"> Show same-as-English only
+            </label>
+            <label style="display: inline-flex; align-items: center; gap: 6px; color: var(--text-dark);">
+                <input type="checkbox" id="filter-unsigned"> Show unsigned only
+            </label>
+            <button type="button" id="export-qa" class="btn-primary" style="padding: 8px 16px; border-radius: 999px; margin-left: auto;">
+                <i class="fas fa-download" style="margin-right: 8px;"></i>Export QA JSON
+            </button>
+        </div>
+    </div>
+
+    <div class="card" style="padding: 0; overflow: auto; border: 1px solid var(--border-color);">
+        <table id="qa-table" style="width: 100%; border-collapse: collapse; min-width: 1280px;">
+            <thead style="position: sticky; top: 0; background: var(--bg-light); z-index: 1;">
+                <tr>
+                    <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color);">Key</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color);">English</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color);">Luganda</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color);">Runyankole</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color);">Ateso</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color);">Luo</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color);">Kiswahili</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color);">Signoff</th>
+                </tr>
+            </thead>
+            <tbody id="qa-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script id="qa-all-keys" type="application/json">{{ i18n_keys | tojson | safe }}</script>
+<script id="qa-static-keys" type="application/json">{{ static_i18n_keys | tojson | safe }}</script>
+<script id="qa-dynamic-patterns" type="application/json">{{ dynamic_i18n_patterns | tojson | safe }}</script>
+<script id="qa-dynamic-expected" type="application/json">{{ dynamic_i18n_expected_keys | tojson | safe }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const LANGS = ['en', 'lg', 'rn', 'teo', 'luo', 'sw'];
+    const LANG_LABELS = {
+        en: 'English',
+        lg: 'Luganda',
+        rn: 'Runyankole',
+        teo: 'Ateso',
+        luo: 'Luo',
+        sw: 'Kiswahili',
+    };
+    const STORAGE_KEY = 'market_pulse_translation_signoff_v1';
+
+    const allKeys = JSON.parse(document.getElementById('qa-all-keys').textContent || '[]');
+    const staticKeys = JSON.parse(document.getElementById('qa-static-keys').textContent || '[]');
+    const dynamicPatterns = JSON.parse(document.getElementById('qa-dynamic-patterns').textContent || '[]');
+    const dynamicExpected = JSON.parse(document.getElementById('qa-dynamic-expected').textContent || '[]');
+
+    const tableBody = document.getElementById('qa-body');
+    const summary = document.getElementById('qa-summary');
+    const filterMissing = document.getElementById('filter-missing');
+    const filterSame = document.getElementById('filter-same');
+    const filterUnsigned = document.getElementById('filter-unsigned');
+    const exportBtn = document.getElementById('export-qa');
+
+    if (typeof translations === 'undefined') {
+        tableBody.innerHTML = '<tr><td colspan="8" style="padding: 20px; color: #e74c3c;">Translations object is not available.</td></tr>';
+        return;
+    }
+
+    function readSignoff() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function saveSignoff(payload) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        } catch (error) {
+            console.warn('Could not save translation QA signoff:', error);
+        }
+    }
+
+    const signoff = readSignoff();
+
+    function getTranslation(lang, key) {
+        const langMap = translations[lang] || {};
+        const enMap = translations.en || {};
+        return langMap[key] || enMap[key] || '';
+    }
+
+    function isMissing(lang, key) {
+        const langMap = translations[lang] || {};
+        return !langMap[key];
+    }
+
+    function isSameAsEnglish(lang, key) {
+        if (lang === 'en') {
+            return false;
+        }
+        const value = getTranslation(lang, key);
+        const en = getTranslation('en', key);
+        return !!value && !!en && value === en;
+    }
+
+    function signed(lang, key) {
+        return !!(signoff[lang] && signoff[lang][key]);
+    }
+
+    function setSigned(lang, key, value) {
+        if (!signoff[lang]) {
+            signoff[lang] = {};
+        }
+        signoff[lang][key] = value;
+        saveSignoff(signoff);
+    }
+
+    function renderSummary() {
+        const rows = LANGS.map((lang) => {
+            const missingCount = allKeys.filter((key) => isMissing(lang, key)).length;
+            const sameCount = allKeys.filter((key) => isSameAsEnglish(lang, key)).length;
+            const signedCount = allKeys.filter((key) => signed(lang, key)).length;
+            const pct = allKeys.length ? ((signedCount / allKeys.length) * 100).toFixed(1) : '0.0';
+
+            return `
+                <div class="card" style="padding: 12px; border: 1px solid var(--border-color);">
+                    <div style="font-weight: 700; color: var(--text-dark);">${LANG_LABELS[lang]}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 6px;">Signed: ${signedCount}/${allKeys.length} (${pct}%)</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">Missing: ${missingCount}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">Same as EN: ${sameCount}</div>
+                </div>
+            `;
+        });
+
+        summary.innerHTML = rows.join('') + `
+            <div class="card" style="padding: 12px; border: 1px solid var(--border-color);">
+                <div style="font-weight: 700; color: var(--text-dark);">Key Scope</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px;">Total keys: ${allKeys.length}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">Static template keys: ${staticKeys.length}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">Dynamic key patterns: ${dynamicPatterns.length}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">Expected dynamic keys: ${dynamicExpected.length}</div>
+            </div>
+        `;
+    }
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function renderRows() {
+        const onlyMissing = filterMissing.checked;
+        const onlySame = filterSame.checked;
+        const onlyUnsigned = filterUnsigned.checked;
+
+        const rows = allKeys.filter((key) => {
+            const missingAny = LANGS.some((lang) => isMissing(lang, key));
+            const sameAny = LANGS.filter((lang) => lang !== 'en').some((lang) => isSameAsEnglish(lang, key));
+            const unsignedAny = LANGS.some((lang) => !signed(lang, key));
+
+            if (onlyMissing && !missingAny) return false;
+            if (onlySame && !sameAny) return false;
+            if (onlyUnsigned && !unsignedAny) return false;
+            return true;
+        }).map((key) => {
+            const cells = LANGS.map((lang) => {
+                const value = getTranslation(lang, key);
+                const missing = isMissing(lang, key);
+                const same = isSameAsEnglish(lang, key);
+                const bg = missing
+                    ? 'rgba(231, 76, 60, 0.10)'
+                    : (same ? 'rgba(243, 156, 18, 0.10)' : 'transparent');
+                const border = missing
+                    ? '1px solid rgba(231, 76, 60, 0.35)'
+                    : (same ? '1px solid rgba(243, 156, 18, 0.35)' : '1px solid transparent');
+                return `
+                    <td style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); vertical-align: top; background: ${bg}; border-left: ${border};">
+                        <div style="font-size: 0.88rem; color: var(--text-dark);">${escapeHtml(value || '(missing)')}</div>
+                    </td>
+                `;
+            }).join('');
+
+            const checks = LANGS.map((lang) => {
+                const checked = signed(lang, key) ? 'checked' : '';
+                return `
+                    <label style="display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; font-size: 0.78rem; color: var(--text-dark);">
+                        <input type="checkbox" data-qa-key="${escapeHtml(key)}" data-qa-lang="${lang}" ${checked}>
+                        ${LANG_LABELS[lang]}
+                    </label>
+                `;
+            }).join('');
+
+            return `
+                <tr>
+                    <td style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); font-family: monospace; font-size: 0.85rem; color: var(--text-dark);">
+                        ${escapeHtml(key)}
+                    </td>
+                    ${cells}
+                    <td style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); min-width: 210px;">
+                        ${checks}
+                    </td>
+                </tr>
+            `;
+        });
+
+        tableBody.innerHTML = rows.join('') || '<tr><td colspan="8" style="padding: 20px; color: var(--text-muted);">No rows match the active filter.</td></tr>';
+
+        tableBody.querySelectorAll('input[type="checkbox"][data-qa-key]').forEach((checkbox) => {
+            checkbox.addEventListener('change', (event) => {
+                const target = event.target;
+                setSigned(target.dataset.qaLang, target.dataset.qaKey, target.checked);
+                renderSummary();
+            });
+        });
+    }
+
+    function exportReport() {
+        const report = {
+            generated_at: new Date().toISOString(),
+            total_keys: allKeys.length,
+            static_template_keys: staticKeys.length,
+            dynamic_patterns: dynamicPatterns,
+            dynamic_expected_keys: dynamicExpected,
+            signoff: signoff,
+            languages: LANGS,
+        };
+
+        const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const date = new Date();
+        const stamp = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        link.href = url;
+        link.download = `translation_qa_${stamp}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    [filterMissing, filterSame, filterUnsigned].forEach((checkbox) => {
+        checkbox.addEventListener('change', renderRows);
+    });
+
+    exportBtn.addEventListener('click', exportReport);
+
+    renderSummary();
+    renderRows();
+})();
+</script>
+{% endblock %}

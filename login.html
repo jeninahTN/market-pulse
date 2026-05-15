@@ -1,0 +1,674 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container login-wrapper">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <div
+            style="display: inline-flex; align-items: center; gap: 10px; font-size: 1.8rem; font-weight: 800; color: var(--text-dark); margin-bottom: 10px;">
+            <i class="fas fa-tractor text-success"></i> Market Pulse
+        </div>
+        <p style="color: var(--text-muted);" data-i18n="login_subtitle">Price insights for your farm.</p>
+    </div>
+    <div class="auth-card"
+        style="background: var(--bg-white); padding: 40px; border-radius: var(--border-radius); box-shadow: var(--shadow-md); width: 100%; max-width: 450px; border: 1px solid var(--border-color); color: var(--text-dark);">
+        <div style="display: flex; cursor: pointer; border-bottom: 2px solid var(--border-color); margin-bottom: 30px;">
+            <div id="tab-signin" class="auth-tab active" onclick="toggleAuth('login')"
+                style="flex: 1; text-align: center; padding-bottom: 12px; font-weight: 600; color: var(--primary); border-bottom: 2px solid var(--primary); transition: var(--transition);">
+                Sign In
+            </div>
+            <div id="tab-signup" class="auth-tab" onclick="toggleAuth('signup')"
+                style="flex: 1; text-align: center; padding-bottom: 12px; font-weight: 600; color: var(--text-muted); transition: var(--transition);">
+                Create Account
+            </div>
+        </div>
+
+        <!-- LOGIN FORM (Now handled by Firebase JS) -->
+        <div id="form-login">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem;"
+                    data-i18n="label_login_id">Email or Phone Number</label>
+                <input type="text" id="login-id" name="username" autocomplete="username" placeholder="e.g. 07... or jane@example.com" required
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;"
+                    data-i18n="ph_login_id">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem;"
+                    data-i18n="label_password">Password</label>
+                <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Enter your password" required
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;"
+                    data-i18n="ph_password">
+            </div>
+
+            <div style="text-align: right; margin-bottom: 20px;">
+                <a href="/forgot-password" style="color: var(--primary); font-size: 0.8rem; font-weight: 600;"
+                    data-i18n="link_forgot">Forgot
+                    Password?</a>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer;">
+                    <input type="checkbox" id="remember-me" style="margin: 0;">
+                    <span>Remember me for 30 days</span>
+                </label>
+            </div>
+
+            <button type="button" id="btn-login" class="btn-primary"
+                style="width: 100%; justify-content: center; padding: 12px; margin-bottom: 20px;"
+                data-i18n="btn_signin">Sign In</button>
+        </div>
+
+        <!-- SIGNUP FORM (Now handled by Firebase JS) -->
+        <div id="form-signup" style="display: none;">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem;">Full Name</label>
+                <input type="text" id="signup-name" placeholder="e.g. Jane Doe" required
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-dark);">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem;">Email Address or Phone Number</label>
+                <input type="text" id="signup-contact" placeholder="e.g. jane@example.com or 07XXXXXXXX" required
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-dark);"
+                    oninput="validateContact(this.value)">
+                <div id="contact-feedback" style="font-size: 0.75rem; margin-top: 4px;"></div>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem;">Create Password</label>
+                <input type="password" id="signup-password" placeholder="Create a strong password" required
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;"
+                    oninput="updateSignupPasswordStrength(this.value)">
+                
+                <!-- Password Strength Indicator -->
+                <div style="margin-top: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Password Strength</span>
+                        <span id="signup-strength-text" style="font-size: 0.75rem; font-weight: 600;">-</span>
+                    </div>
+                    <div style="height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden;">
+                        <div id="signup-strength-bar" style="height: 100%; width: 0%; transition: width 0.3s, background-color 0.3s; border-radius: 2px;"></div>
+                    </div>
+                    <div id="signup-password-feedback" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;"></div>
+                </div>
+            </div>
+            
+            <!-- OTP Input (Hidden by default) -->
+            <div id="otp-section" style="display: none; margin-bottom: 20px; padding: 15px; background: #f0fdf4; border-radius: 8px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; color: var(--primary);">Enter Verification Code</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <input type="text" id="otp-code" placeholder="6-digit code" maxlength="6"
+                        style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--primary); text-align: center; font-size: 1.2rem; font-weight: 600;"
+                        oninput="handleOTPInput(this.value)">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+                    <span id="otp-status" style="color: var(--text-muted);">Code sent to your phone</span>
+                    <button type="button" id="resend-btn" onclick="resendOTP()" 
+                        style="background: none; border: none; color: var(--primary); cursor: pointer; font-weight: 600; padding: 0;"
+                        disabled>Resend</button>
+                </div>
+                <div id="otp-feedback" style="font-size: 0.75rem; margin-top: 8px;"></div>
+            </div>
+
+            <div id="recaptcha-container"></div>
+
+            <button type="button" id="btn-signup" class="btn-primary"
+                style="width: 100%; justify-content: center; padding: 12px; margin-bottom: 20px;">Verify & Sign Up</button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+            <div style="height: 1px; background: var(--border-color); flex: 1;"></div>
+            <div style="color: var(--text-muted); font-size: 0.8rem;">OR</div>
+            <div style="height: 1px; background: var(--border-color); flex: 1;"></div>
+        </div>
+
+        <button type="button" id="btn-google"
+            style="width: 100%; padding: 12px; border-radius: 50px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-dark); display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; cursor: pointer; transition: var(--transition);" onmouseover="this.style.background='var(--primary)'" onmouseout="this.style.background='var(--bg-light)'">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 18px;">
+            <span data-i18n="btn_google">Sign in with Google</span>
+        </button>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
+<script>
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDg93KyfKYQpqQdCsYglYnkoY8KxPhlG5s",
+        authDomain: "market-pulse-8b45b.firebaseapp.com",
+        projectId: "market-pulse-8b45b",
+        storageBucket: "market-pulse-8b45b.appspot.com",
+        messagingSenderId: "1063008618195",
+        appId: "1:745642699794:web:34a2e8bf2e594a80993ccb"
+    };
+
+    const MOCK_MODE = {{ 'true' if auth_mock_mode else 'false' }};
+    let MOCK_OTP = null;
+
+    // Generate random 6-digit code for mock mode
+    function generateMockOTP() {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+    }
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+    function setButtonLoading(button, isLoading, loadingText) {
+        if (!button) return;
+        if (isLoading) {
+            button.dataset.originalHtml = button.innerHTML;
+            button.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i>${loadingText || 'Loading...'}`;
+            button.disabled = true;
+            button.style.opacity = '0.85';
+            button.style.pointerEvents = 'none';
+        } else {
+            if (button.dataset.originalHtml) button.innerHTML = button.dataset.originalHtml;
+            button.disabled = false;
+            button.style.opacity = '1';
+            button.style.pointerEvents = '';
+        }
+    }
+
+    async function finishGoogleSignIn(user) {
+        if (!user) throw new Error('No user returned from Google sign-in');
+        const idToken = await user.getIdToken();
+        verifyBackend(idToken);
+    }
+
+    // Phone Auth Recaptcha
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+        'size': 'invisible'
+    });
+
+    let confirmationResult = null;
+
+    // Handle Google redirect flows (mobile browsers / popup-blocked scenarios)
+    firebase.auth().getRedirectResult()
+        .then(result => {
+            if (result && result.user) {
+                return finishGoogleSignIn(result.user);
+            }
+        })
+        .catch(err => {
+            // Surface the real Firebase error so it's easy to fix during demo setup.
+            showMessage('Google Sign-In Error: ' + (err && err.message ? err.message : String(err)), 'error');
+        });
+
+    // Google Login Logic
+    document.getElementById('btn-google').addEventListener('click', async () => {
+        const btn = document.getElementById('btn-google');
+        setButtonLoading(btn, true, 'Signing in...');
+        try {
+            const result = await firebase.auth().signInWithPopup(googleProvider);
+            await finishGoogleSignIn(result.user);
+        } catch (err) {
+            const code = err && err.code ? String(err.code) : '';
+            const message = err && err.message ? String(err.message) : String(err);
+
+            // Common failure: popup blocked or certain mobile browsers. Use redirect flow.
+            if (code === 'auth/popup-blocked' || code === 'auth/cancelled-popup-request') {
+                showMessage('Popup blocked. Switching to redirect sign-in...', 'info');
+                firebase.auth().signInWithRedirect(googleProvider);
+                return;
+            }
+
+            // Most common local dev failure: using 127.0.0.1 when Firebase only authorizes localhost.
+            if (code === 'auth/unauthorized-domain') {
+                showMessage(
+                    'Google sign-in blocked for this domain. Tip: open the app at http://localhost:8000/login (not 127.0.0.1), or add 127.0.0.1 to Firebase Authorized domains.',
+                    'error'
+                );
+            } else {
+                showMessage('Google Sign-In Error: ' + message, 'error');
+            }
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    });
+
+    // Custom Login Logic
+    document.getElementById('btn-login').addEventListener('click', () => {
+        const id = document.getElementById('login-id').value;
+        const password = document.getElementById('login-password').value;
+
+        if (!id || !password) {
+            alert('Please enter both Email/Phone and Password');
+            return;
+        }
+
+        if (id.includes('@')) {
+            // Email Login
+            if (MOCK_MODE) {
+                verifyBackend(`MOCK_TOKEN_EMAIL_${id}`);
+                return;
+            }
+            firebase.auth().signInWithEmailAndPassword(id, password)
+                .then(result => {
+                    if (result.user.emailVerified) {
+                        return result.user.getIdToken();
+                    } else {
+                        alert('Please verify your email address before logging in. Check your spam folder!');
+                        firebase.auth().signOut();
+                        throw new Error('Email not verified');
+                    }
+                })
+                .then(idToken => {
+                    if (idToken) verifyBackend(idToken);
+                })
+                .catch(err => {
+                    if (err.message !== 'Email not verified') alert('Login Failed: ' + err.message);
+                });
+        } else {
+            alert('For phone numbers, please use the Signup tab to get a verification code.');
+        }
+    });
+
+    // Custom Signup Logic
+    document.getElementById('btn-signup').addEventListener('click', () => {
+        const fullname = document.getElementById('signup-name').value;
+        const contact = document.getElementById('signup-contact').value;
+        const password = document.getElementById('signup-password').value;
+        const otpCode = document.getElementById('otp-code').value;
+
+        // Step 1: Trigger Verification / Validation
+        if (!fullname || !contact || !password) {
+            alert('Please fill in all fields (Name, Email/Phone, Password)');
+            return;
+        }
+
+        if (contact.includes('@')) {
+            // Email Logic
+            if (MOCK_MODE) {
+                alert('MOCK MODE: Skipping email verification. Signing you in...');
+                verifyBackend(`MOCK_TOKEN_EMAIL_${contact}`, fullname);
+                return;
+            }
+            firebase.auth().createUserWithEmailAndPassword(contact, password)
+                .then(result => {
+                    result.user.sendEmailVerification();
+                    alert('Verification email sent! Please check your inbox and verify before logging in.');
+                    toggleAuth('login');
+                })
+                .catch(err => alert('Signup Error: ' + err.message));
+        } else {
+            // Phone Logic (SMS)
+            const phoneNumber = contact.startsWith('+') ? contact : '+256' + contact.replace(/^0/, '');
+            currentPhoneNumber = phoneNumber;
+            
+            if (MOCK_MODE) {
+                if (otpCode) {
+                    if (otpCode === MOCK_OTP) {
+                        verifyBackend(`MOCK_TOKEN_PHONE_${phoneNumber}`, fullname);
+                    } else {
+                        document.getElementById('otp-feedback').innerHTML = '<span style="color: #dc3545;">✗ Invalid code. Please try again.</span>';
+                        document.getElementById('otp-code').value = '';
+                    }
+                    return;
+                }
+                
+                // Show loading state
+                showSignupLoading('Sending SMS...');
+                
+                setTimeout(() => {
+                    MOCK_OTP = generateMockOTP();
+                    document.getElementById('otp-section').style.display = 'block';
+                    document.getElementById('btn-signup').innerText = 'Verify Code';
+                    document.getElementById('otp-status').textContent = `Code sent to ${phoneNumber.slice(-3)}`;
+                    hideSignupLoading();
+                    startResendCountdown();
+                    showMessage(`Mock SMS sent to ${phoneNumber}. Code: ${MOCK_OTP}`, 'success');
+                }, 1500);
+                return;
+            }
+
+            if (otpCode) {
+                if (confirmationResult) {
+                    showSignupLoading('Verifying...');
+                    confirmationResult.confirm(otpCode)
+                        .then(result => result.user.getIdToken())
+                        .then(idToken => verifyBackend(idToken, fullname))
+                        .catch(err => {
+                            hideSignupLoading();
+                            document.getElementById('otp-feedback').innerHTML = '<span style="color: #dc3545;">✗ Invalid or expired code</span>';
+                            document.getElementById('otp-code').value = '';
+                        });
+                }
+                return;
+            }
+
+            // Send SMS
+            showSignupLoading('Sending SMS...');
+            firebase.auth().signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
+                .then(result => {
+                    confirmationResult = result;
+                    document.getElementById('otp-section').style.display = 'block';
+                    document.getElementById('btn-signup').innerText = 'Verify Code';
+                    document.getElementById('otp-status').textContent = `Code sent to ${phoneNumber.slice(-3)}`;
+                    hideSignupLoading();
+                    startResendCountdown();
+                    showMessage('SMS verification code sent!', 'success');
+                })
+                .catch(err => {
+                    hideSignupLoading();
+                    showMessage('Phone Auth Error: ' + err.message, 'error');
+                });
+        }
+    });
+
+    function verifyBackend(idToken, fullname = null) {
+        fetch('/auth/firebase-verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                idToken: idToken,
+                fullname: fullname
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.cookie = `user_id=${data.user_id}; path=/`;
+                document.cookie = `username=${data.username}; path=/`;
+                window.location.href = data.redirect;
+            } else {
+                alert('Backend Sync Failed: ' + data.message);
+            }
+        })
+        .catch(err => alert('Sync Error: ' + err.message));
+    }
+
+    function toggleAuth(mode) {
+        const loginForm = document.getElementById('form-login');
+        const signupForm = document.getElementById('form-signup');
+        const loginTab = document.getElementById('tab-signin');
+        const signupTab = document.getElementById('tab-signup');
+
+        if (mode === 'login') {
+            loginForm.style.display = 'block';
+            signupForm.style.display = 'none';
+            loginTab.style.borderBottom = '2px solid var(--primary)';
+            loginTab.style.color = 'var(--text-dark)';
+            signupTab.style.borderBottom = 'none';
+            signupTab.style.color = 'var(--text-muted)';
+        } else {
+            loginForm.style.display = 'none';
+            signupForm.style.display = 'block';
+            signupTab.style.borderBottom = '2px solid var(--primary)';
+            signupTab.style.color = 'var(--text-dark)';
+            loginTab.style.borderBottom = 'none';
+            loginTab.style.color = 'var(--text-muted)';
+        }
+    }
+
+    // Contact validation for signup
+    function validateContact(contact) {
+        const feedback = document.getElementById('contact-feedback');
+        const submitBtn = document.getElementById('btn-signup');
+        
+        if (contact === '') {
+            feedback.innerHTML = '';
+            submitBtn.disabled = false;
+            return;
+        }
+        
+        // Email validation
+        const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const phonePattern = /^(07\d{8}|2567\d{8}|\+2567\d{8})$/;
+        
+        if (emailPattern.test(contact)) {
+            feedback.innerHTML = '<span style="color: #28a745;">✓ Valid email address</span>';
+            submitBtn.disabled = false;
+        } else if (phonePattern.test(contact.replace(/\s/g, ''))) {
+            const formatted = contact.replace(/\s/g, '');
+            if (formatted.startsWith('07')) {
+                feedback.innerHTML = '<span style="color: #28a745;">✓ Valid Uganda phone number</span>';
+            } else {
+                feedback.innerHTML = '<span style="color: #28a745;">✓ Valid phone number</span>';
+            }
+            submitBtn.disabled = false;
+        } else {
+            feedback.innerHTML = '<span style="color: #dc3545;">✗ Please enter a valid email or Uganda phone number</span>';
+            submitBtn.disabled = true;
+        }
+    }
+
+    // OTP handling
+    let resendTimer = null;
+    let currentPhoneNumber = null;
+
+    function handleOTPInput(value) {
+        const feedback = document.getElementById('otp-feedback');
+        const submitBtn = document.getElementById('btn-signup');
+        
+        // Only allow digits
+        value = value.replace(/\D/g, '');
+        document.getElementById('otp-code').value = value;
+        
+        if (value.length === 6) {
+            feedback.innerHTML = '<span style="color: #17a2b8;">Verifying code...</span>';
+            submitBtn.disabled = true;
+            
+            // Auto-verify when 6 digits entered
+            setTimeout(() => {
+                verifyOTPCode(value);
+            }, 500);
+        } else if (value.length > 0) {
+            feedback.innerHTML = `<span style="color: #ffc107;">Enter ${6 - value.length} more digit(s)</span>`;
+        } else {
+            feedback.innerHTML = '';
+        }
+    }
+
+    function verifyOTPCode(code) {
+        const feedback = document.getElementById('otp-feedback');
+        
+        if (MOCK_MODE) {
+            if (code === MOCK_OTP) {
+                feedback.innerHTML = '<span style="color: #28a745;">✓ Code verified!</span>';
+                verifyBackend(`MOCK_TOKEN_PHONE_${currentPhoneNumber}`, document.getElementById('signup-name').value);
+            } else {
+                feedback.innerHTML = '<span style="color: #dc3545;">✗ Invalid code. Please try again.</span>';
+                document.getElementById('otp-code').value = '';
+            }
+            return;
+        }
+        
+        // Firebase verification
+        if (confirmationResult) {
+            confirmationResult.confirm(code)
+                .then(result => {
+                    feedback.innerHTML = '<span style="color: #28a745;">✓ Code verified!</span>';
+                    return result.user.getIdToken();
+                })
+                .then(idToken => {
+                    verifyBackend(idToken, document.getElementById('signup-name').value);
+                })
+                .catch(err => {
+                    feedback.innerHTML = '<span style="color: #dc3545;">✗ Invalid or expired code</span>';
+                    document.getElementById('otp-code').value = '';
+                });
+        }
+    }
+
+    function resendOTP() {
+        const contact = document.getElementById('signup-contact').value;
+        const feedback = document.getElementById('otp-feedback');
+        
+        if (!currentPhoneNumber) {
+            showMessage('Please request SMS first', 'error');
+            return;
+        }
+        
+        // Show loading
+        feedback.innerHTML = '<span style="color: #17a2b8;">Resending code...</span>';
+        
+        if (MOCK_MODE) {
+            setTimeout(() => {
+                MOCK_OTP = generateMockOTP();
+                feedback.innerHTML = '<span style="color: #28a745;">✓ New code sent!</span>';
+                document.getElementById('otp-code').value = '';
+                startResendCountdown();
+                showMessage(`New verification code: ${MOCK_OTP}`, 'success');
+            }, 1000);
+            return;
+        }
+        
+        // Firebase resend
+        firebase.auth().signInWithPhoneNumber(currentPhoneNumber, window.recaptchaVerifier)
+            .then(result => {
+                confirmationResult = result;
+                feedback.innerHTML = '<span style="color: #28a745;">✓ New code sent!</span>';
+                document.getElementById('otp-code').value = '';
+                startResendCountdown();
+                showMessage('New verification code sent!', 'success');
+            })
+            .catch(err => {
+                feedback.innerHTML = '<span style="color: #dc3545;">✗ Failed to send code</span>';
+                showMessage('Failed to resend code: ' + err.message, 'error');
+            });
+    }
+
+    function startResendCountdown() {
+        const resendBtn = document.getElementById('resend-btn');
+        const otpStatus = document.getElementById('otp-status');
+        let seconds = 120; // 2 minutes
+        
+        resendBtn.disabled = true;
+        
+        resendTimer = setInterval(() => {
+            seconds--;
+            
+            if (seconds > 0) {
+                const minutes = Math.floor(seconds / 60);
+                const remaining = seconds % 60;
+                resendBtn.textContent = `Resend (${minutes}:${remaining.toString().padStart(2, '0')})`;
+                otpStatus.textContent = `Code expires in ${minutes}:${remaining.toString().padStart(2, '0')}`;
+            } else {
+                clearInterval(resendTimer);
+                resendBtn.textContent = 'Resend';
+                resendBtn.disabled = false;
+                otpStatus.textContent = 'Code expired. Request new code';
+            }
+        }, 1000);
+    }
+
+    // Password strength calculation for signup
+    function updateSignupPasswordStrength(password) {
+        const feedback = document.getElementById('signup-password-feedback');
+        const strengthBar = document.getElementById('signup-strength-bar');
+        const strengthText = document.getElementById('signup-strength-text');
+        
+        let score = 0;
+        let feedbacks = [];
+        
+        // Length
+        if (password.length >= 8) {
+            score += 20;
+        } else {
+            feedbacks.push("Add at least 8 characters");
+        }
+        
+        // Uppercase
+        if (/[A-Z]/.test(password)) {
+            score += 20;
+        } else {
+            feedbacks.push("Add uppercase letter");
+        }
+        
+        // Lowercase
+        if (/[a-z]/.test(password)) {
+            score += 20;
+        } else {
+            feedbacks.push("Add lowercase letter");
+        }
+        
+        // Number
+        if (/\d/.test(password)) {
+            score += 20;
+        } else {
+            feedbacks.push("Add number");
+        }
+        
+        // Special character
+        if (/[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?]/.test(password)) {
+            score += 20;
+        } else {
+            feedbacks.push("Add special character");
+        }
+        
+        // Update UI
+        strengthBar.style.width = score + '%';
+        
+        if (score >= 80) {
+            strengthBar.style.backgroundColor = '#28a745';
+            strengthText.textContent = 'Very Strong';
+            strengthText.style.color = '#28a745';
+        } else if (score >= 60) {
+            strengthBar.style.backgroundColor = '#17a2b8';
+            strengthText.textContent = 'Strong';
+            strengthText.style.color = '#17a2b8';
+        } else if (score >= 40) {
+            strengthBar.style.backgroundColor = '#ffc107';
+            strengthText.textContent = 'Medium';
+            strengthText.style.color = '#ffc107';
+        } else {
+            strengthBar.style.backgroundColor = '#dc3545';
+            strengthText.textContent = 'Weak';
+            strengthText.style.color = '#dc3545';
+        }
+        
+        feedback.innerHTML = feedbacks.length > 0 ? feedbacks.join(' • ') : 'Great password!';
+    }
+
+    // Loading states for signup
+    function showSignupLoading(message = 'Processing...') {
+        const btn = document.getElementById('btn-signup');
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${message}`;
+        btn.disabled = true;
+    }
+
+    function hideSignupLoading() {
+        const btn = document.getElementById('btn-signup');
+        const otpSection = document.getElementById('otp-section');
+        
+        if (otpSection.style.display === 'none') {
+            btn.innerHTML = 'Verify & Sign Up';
+        } else {
+            btn.innerHTML = 'Verify Code';
+        }
+        
+        btn.disabled = false;
+    }
+
+    // Show toast notifications instead of alerts
+    function showMessage(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            max-width: 300px;
+            ${type === 'success' ? 'background: #28a745;' : type === 'error' ? 'background: #dc3545;' : 'background: #17a2b8;'}
+        `;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+
+    // Replace alert calls with showMessage
+    const originalAlert = window.alert;
+    window.alert = function(message) {
+        showMessage(message, 'error');
+    };
+</script>
+{% endblock %}

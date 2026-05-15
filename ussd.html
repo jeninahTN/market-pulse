@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="ussd-hero-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; margin-bottom: 60px;">
+        <div>
+            <h1 style="font-size: 3rem; line-height: 1.2; margin-bottom: 20px;" data-i18n="ussd_hero_title">Crop Prices
+                are Now a Call Away</h1>
+            <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px;" data-i18n="ussd_hero_desc">No
+                internet? No smartphone? No
+                problem. Get the latest market prices by dialing a simple code on any phone.</p>
+            <button class="btn-primary" style="padding: 12px 30px; font-size: 1.1rem;" data-i18n="btn_how_it_works">See
+                How It Works</button>
+        </div>
+        <div>
+            <img src="https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                alt="Farmer using mobile phone" style="width: 100%; border-radius: 20px; box-shadow: var(--shadow-md);">
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 50px;">
+        <h2 style="font-size: 2rem; margin-bottom: 10px;" data-i18n="ussd_steps_title">Get Prices in 3 Easy Steps</h2>
+        <p style="color: var(--text-muted);" data-i18n="ussd_steps_desc">Follow these simple steps to get price
+            information right on your phone
+            screen.</p>
+    </div>
+
+    <div class="ussd-steps-grid"
+        style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; background: var(--bg-light); padding: 40px; border-radius: 20px; margin-bottom: 60px; border: 1px solid var(--border-color);">
+        <div style="display: flex; flex-direction: column; gap: 30px;">
+            <div style="display: flex; gap: 20px;">
+                <div
+                    style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700;">
+                    1</div>
+                <div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px;" data-i18n="ussd_step_1_title">Dial The Code</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);" data-i18n="ussd_step_1_desc">Open your
+                        phone's dialer and enter this
+                        code: <strong>*123#</strong>. Then press the call button.</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 20px;">
+                <div
+                    style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700;">
+                    2</div>
+                <div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px;" data-i18n="ussd_step_2_title">Choose Your Crop &
+                        Market</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);" data-i18n="ussd_step_2_desc">A menu will
+                        appear on your screen. Enter the
+                        number for your crop (e.g., 1 for Maize), then enter the number for your market (e.g., 2 for
+                        Kampala).</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 20px;">
+                <div
+                    style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700;">
+                    3</div>
+                <div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px;" data-i18n="ussd_step_3_title">Get Price Advice
+                    </h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);" data-i18n="ussd_step_3_desc">You will
+                        instantly see the price advice on
+                        your screen in your chosen language.</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 18px; justify-content: center;">
+            <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div
+                        style="background: var(--bg-success-tint); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); border: 1px solid var(--border-color);">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;" data-i18n="ussd_on_screen">On Your Screen:</div>
+                </div>
+                <div
+                    style="background: var(--bg-ussd-screen); padding: 15px; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace; font-size: 0.9rem; border: 1px solid var(--border-color); color: var(--text-dark);">
+                    Market Pulse<br><br>
+                    1. Maize<br>
+                    2. Beans<br>
+                    3. Cassava<br><br>
+                    You reply: <span data-i18n="ussd_reply_1">1</span>
+                </div>
+            </div>
+
+            <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div
+                        style="background: var(--bg-success-tint); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); border: 1px solid var(--border-color);">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;" data-i18n="ussd_final_advice">Final Advice:</div>
+                </div>
+                <div
+                    style="background: var(--bg-ussd-screen); padding: 15px; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace; font-size: 0.9rem; border: 1px solid var(--border-color); color: var(--text-dark);">
+                    <span data-i18n="ussd_demo_msg_1">Price rising—sell soon!</span><br>
+                    <i data-i18n="ussd_demo_msg_2">Bei erinnya - tunda mangu!</i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2 style="text-align: center; margin-bottom: 30px;" data-i18n="ussd_benefits_title">Benefits for Every Farmer</h2>
+    <div class="ussd-benefits-grid"
+        style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; text-align: center; margin-bottom: 60px;">
+        <div>
+            <div
+                style="background: var(--bg-success-tint); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: var(--primary); font-size: 1.5rem; border: 1px solid var(--border-color);">
+                <i class="fas fa-wifi"></i>
+            </div>
+            <h3 data-i18n="ben_internet_title">Works Without Internet</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px;" data-i18n="ben_internet_desc">Get
+                important market information
+                even if you don't have internet data or a smartphone.</p>
+        </div>
+        <div>
+            <div
+                style="background: var(--bg-success-tint); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: var(--primary); font-size: 1.5rem; border: 1px solid var(--border-color);">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 data-i18n="ben_instant_title">Get Instant Replies</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px;" data-i18n="ben_instant_desc">
+                Receive price information in
+                seconds, so you can decide quickly when to sell.</p>
+        </div>
+        <div>
+            <div
+                style="background: var(--bg-success-tint); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: var(--primary); font-size: 1.5rem; border: 1px solid var(--border-color);">
+                <i class="fas fa-coins"></i>
+            </div>
+            <h3 data-i18n="ben_profit_title">Make More Profit</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px;" data-i18n="ben_profit_desc">
+                Knowing the right price helps you
+                sell at the best time to earn more from your harvest.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

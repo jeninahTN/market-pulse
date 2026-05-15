@@ -1,0 +1,16 @@
+{
+  "name": "Market Pulse",
+  "short_name": "MarketPulse",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#2ecc71",
+  "icons": [
+    {
+      "src": "/static/images/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="history-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 30px;">
+        <a href="/" style="color: var(--text-muted); font-size: 1.2rem;"><i class="fas fa-arrow-left"></i></a>
+        <h1 style="font-size: 2rem;">Prediction History</h1>
+    </div>
+
+    <div style="background: var(--bg-white); padding: 20px; border-radius: 16px; box-shadow: var(--shadow-sm); margin-bottom: 30px; border: 1px solid var(--border-color);">
+        <div class="history-list" style="display: flex; flex-direction: column; gap: 16px;">
+            {% if crops %}
+                {% for crop in crops %}
+                <div class="card history-row" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+                    <div class="history-row-main" style="display: flex; align-items: center; gap: 15px;">
+                        <img src="{{ crop.image }}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
+                        <div>
+                            <h3 style="font-size: 1rem; margin-bottom: 2px;">{{ crop.name }}</h3>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">Market: {{ crop.region|capitalize }}</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">{{ crop.freshness_label }}</div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: var(--primary); font-weight: 700; font-size: 1.1rem;">{{ crop.price }} {{ crop.unit }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Recent Forecast</div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 40px;">
+                    <p style="color: var(--text-muted);">No historical predictions found.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="text-align: center;">
+        <button class="btn-primary" onclick="window.location.href='/predict-form'">
+            <i class="fas fa-plus"></i> Get Another Prediction
+        </button>
+    </div>
+</div>
+<script id="dashboard-snapshots" type="application/json">
+    {{ detail_snapshots | tojson | safe }}
+</script>
+{% endblock %}

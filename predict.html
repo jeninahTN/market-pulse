@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container predict-wrapper" style="max-width: 600px; margin-top: 50px; margin-bottom: 50px;">
+    <div class="card predict-card" style="padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; background: var(--bg-light); color: var(--primary); border-radius: 50%; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                <i class="fas fa-chart-line fa-2x"></i>
+            </div>
+            <h1 style="font-size: 2rem; margin-bottom: 10px; color: var(--text-dark);" data-i18n="predict_title">Get Price Prediction</h1>
+            <p style="color: var(--text-muted);" data-i18n="predict_desc">Select your crop and local market to see the next forecasted price.</p>
+        </div>
+
+        <div id="offline-prediction-banner" style="display: none; margin-bottom: 20px; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(46, 204, 113, 0.25); background: rgba(46, 204, 113, 0.10); color: var(--text-dark); font-size: 0.95rem;">
+            You are offline. Market Pulse will use the last saved prediction on this device if it is available.
+        </div>
+
+        <form id="prediction-form" action="/predict-form" method="POST">
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-dark);" data-i18n="label_select_crop">Select Crop</label>
+                <div style="position: relative;">
+                    <select name="crop_id" required style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); appearance: none; background: var(--bg-light); color: var(--text-dark); font-size: 1rem;">
+                        <option value="" disabled selected data-i18n="opt_choose_crop">Choose a crop...</option>
+                        {% for crop_opt in all_crops %}
+                        <option value="{{ crop_opt.id }}" data-i18n="crop_{{ crop_opt.id }}">{{ crop_opt.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <i class="fas fa-chevron-down" style="position: absolute; right: 15px; top: 18px; color: var(--text-muted); pointer-events: none;"></i>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-dark);" data-i18n="label_select_market">Select Market / Region</label>
+                <div style="position: relative;">
+                    <select name="region" required style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); appearance: none; background: var(--bg-light); color: var(--text-dark); font-size: 1rem;">
+                        <option value="" disabled selected data-i18n="opt_choose_market">Choose a market...</option>
+                        {% for market in all_markets %}
+                        <option value="{{ market.region }}" data-i18n="market_{{ market.region }}">{{ market.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <i class="fas fa-chevron-down" style="position: absolute; right: 15px; top: 18px; color: var(--text-muted); pointer-events: none;"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 16px; font-size: 1.1rem; border-radius: 50px;">
+                <i class="fas fa-magic" style="margin-right: 10px;"></i> <span data-i18n="predict_title">Get Price Prediction</span>
+            </button>
+        </form>
+
+        <a href="/" style="display: block; text-align: center; margin-top: 20px; color: var(--text-muted); text-decoration: none; font-weight: 500;">
+            <i class="fas fa-arrow-left" style="margin-right: 5px;"></i> <span data-i18n="link_back_dashboard">Back to Dashboard</span>
+        </a>
+    </div>
+</div>
+<script id="dashboard-snapshots" type="application/json">
+    {{ detail_snapshots | tojson | safe }}
+</script>
+{% endblock %}

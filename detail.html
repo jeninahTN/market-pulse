@@ -1,0 +1,283 @@
+﻿{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div style="margin-bottom: 20px;">
+        <a href="/"
+            style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-dark); background: var(--bg-light); padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <i class="fas fa-arrow-left"></i> <span data-i18n="btn_back">Back</span>
+        </a>
+    </div>
+
+    <div class="detail-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h1 style="font-size: 2rem; margin-bottom: 5px; color: var(--text-dark);"><span data-i18n="crop_{{ detail.id | lower }}">{{ detail.name }}</span> <span data-i18n="text_in">in</span> <span data-i18n="market_{{ detail.region | lower }}">{{ detail.region|capitalize }}</span></h1>
+            <p class="text-success" style="font-size: 0.9rem;" data-i18n="last_updated">{{ detail.last_updated_label }}</p>
+            <div style="display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(46, 204, 113, 0.12); color: var(--primary); font-size: 0.82rem; font-weight: 600;">
+                <i class="fas fa-clock"></i>
+                <span>{{ detail.data_freshness_label }}</span>
+            </div>
+        </div>
+        <button id="play-advisory-btn" class="btn-primary" style="padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 8px;" onclick="playVoiceAdvisory('{{ detail.id | lower }}', '{{ detail.region | lower }}')">
+            <i class="fas fa-volume-up" id="audio-icon"></i> <span id="audio-text" data-i18n="btn_play_advisory">Play Advisory</span>
+        </button>
+        <audio id="advisory-audio" style="display: none;"></audio>
+    </div>
+
+    <div class="card" style="margin-bottom: 30px;">
+        <div class="detail-price-row" style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+            <div>
+                <div style="color: var(--text-muted); font-size: 0.9rem;" data-i18n="title_current_price">Current Price</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-dark);">{{ detail.current_price }} {{ detail.unit }}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="color: var(--primary); font-size: 0.9rem;" data-i18n="title_predicted_price_source">Predicted Price</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">{{ detail.predicted_price }} {{
+                    detail.unit }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">{{ detail.prediction_source }}</div>
+                <!-- Confidence Level -->
+                <div style="margin-top: 8px; padding: 4px 8px; border-radius: 12px; background: {% if detail.confidence > 0.8 %}rgba(46, 204, 113, 0.1){% elif detail.confidence > 0.6 %}rgba(241, 196, 15, 0.1){% else %}rgba(231, 76, 60, 0.1){% endif %}; color: {% if detail.confidence > 0.8 %}var(--primary){% elif detail.confidence > 0.6 %}var(--secondary){% else %}var(--accent){% endif %}; font-size: 0.75rem; font-weight: 600;">
+                    <i class="fas fa-chart-line"></i> Confidence: {{ "%.0f"|format(detail.confidence * 100) }}%
+                </div>
+            </div>
+        </div>
+        <div style="height: 300px; width: 100%;">
+            <canvas id="priceChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Farmer Advice Section -->
+    <div class="card" style="margin-bottom: 30px; background: linear-gradient(135deg, var(--bg-light) 0%, var(--surface-soft) 100%); border: 1px solid var(--border-color);">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 0 20px;">
+            <div style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <h3 style="margin: 0; color: var(--text-dark);" data-i18n="farmer_advice">Farmer's Advisory</h3>
+            <div style="margin-left: auto; padding: 6px 12px; border-radius: 20px; background: {% if detail.risk_level == 'LOW' %}rgba(46, 204, 113, 0.15); color: var(--primary){% elif detail.risk_level == 'MEDIUM' %}rgba(241, 196, 15, 0.15); color: var(--secondary){% else %}rgba(231, 76, 60, 0.15); color: var(--accent){% endif %}; font-size: 0.8rem; font-weight: 600; border: 1px solid {% if detail.risk_level == 'LOW' %}rgba(46, 204, 113, 0.3);{% elif detail.risk_level == 'MEDIUM' %}rgba(241, 196, 15, 0.3);{% else %}rgba(231, 76, 60, 0.3);{% endif %};">
+                <i class="fas fa-exclamation-triangle"></i> {{ detail.risk_level }} RISK
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 20px 20px 20px;">
+            <div>
+                <div style="background: var(--bg-white); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                    <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; font-weight: 600;" data-i18n="recommended_action">Recommended Action</div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 8px;">
+                        {% if detail.advice == 'SELL_NOW' %}
+                            <i class="fas fa-hand-holding-usd"></i> SELL NOW
+                        {% elif detail.advice == 'SELL_SOON' %}
+                            <i class="fas fa-clock"></i> SELL SOON
+                        {% else %}
+                            <i class="fas fa-pause"></i> HOLD
+                        {% endif %}
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">{{ detail.advice_desc }}</div>
+                    <div style="margin-top: 12px; padding: 8px 12px; background: var(--bg-light); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); border: 1px solid var(--border-color);">
+                        <i class="fas fa-calendar"></i> Timeframe: {{ detail.timeframe }}
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div style="background: var(--bg-white); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                    <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; font-weight: 600;" data-i18n="market_factors">Market Factors</div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-dark); margin-bottom: 4px;">
+                            <i class="fas fa-cloud-rain"></i> Weather Impact
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">{{ detail.weather_impact }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-dark); margin-bottom: 4px;">
+                            <i class="fas fa-chart-line"></i> Market Sentiment
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">{{ detail.market_sentiment }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-insights-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 30px;">
+        <div>
+            <h3 style="margin-bottom: 20px; color: var(--text-dark);" data-i18n="why_price_high">Why the price is high</h3>
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <div
+                    style="background: var(--bg-light); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border-color);">
+                    <i class="fas fa-store text-success"></i>
+                </div>
+                <div>
+                    <h4 style="font-size: 1rem; color: var(--text-dark);" data-i18n="insight_high_demand">High Demand</h4>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;" data-i18n="insight_high_demand_desc">Increased demand from nearby towns and urban
+                        centers is driving prices up.</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <div
+                    style="background: var(--bg-light); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border-color);">
+                    <i class="fas fa-truck text-success"></i>
+                </div>
+                <div>
+                    <h4 style="font-size: 1rem; color: var(--text-dark);" data-i18n="insight_low_supply">Low Supply</h4>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;" data-i18n="insight_low_supply_desc">Fewer farmers are bringing maize to the
+                        market this week, reducing the available supply.</p>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h3 style="margin-bottom: 20px; color: var(--text-dark);" data-i18n="future_outlook">Future Outlook</h3>
+            <div class="card"
+                style="border-left: 4px solid var(--primary); display: flex; gap: 15px; align-items: start;">
+                <div
+                    style="background: var(--bg-light); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border-color);">
+                    <i class="fas fa-arrow-down text-success"></i>
+                </div>
+                <div>
+                    <h4 style="font-size: 1rem; color: var(--text-dark);" data-i18n="insight_decrease_2w">Prices may decrease in 2 weeks</h4>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;" data-i18n="insight_decrease_2w_desc">As the main harvest season begins, more
+                        supply is expected, which could lead to lower prices.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+        <p style="font-weight: 600; margin-bottom: 10px; color: var(--text-dark);" data-i18n="change_language">Change Language:</p>
+        <div style="display: flex; gap: 10px;">
+            <!-- Language buttons removed in favor of global dropdown, but keeping structure if needed -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/js/charts.js?v=20260326r4"></script>
+<script id="detail-data" type="application/json">
+    {{ detail | tojson | safe }}
+</script>
+<script id="history-data" type="application/json">
+    {{ detail.history | tojson | safe }}
+</script>
+<script>
+    // Pass data from Jinja to JS
+    const detailData = JSON.parse(document.getElementById('detail-data').textContent);
+    const historyData = JSON.parse(document.getElementById('history-data').textContent);
+    renderPriceChart('priceChart', historyData);
+
+    async function fetchVoiceAdvisory(cropId, region, lang, maxAttempts) {
+        let lastError = null;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                const res = await fetch(`/api/voice-advisory?crop_id=${cropId}&region=${region}&lang=${lang}`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    return data;
+                }
+                lastError = new Error(data.error || "Failed to load audio");
+            } catch (err) {
+                lastError = err;
+            }
+
+            if (attempt < maxAttempts) {
+                await new Promise((resolve) => setTimeout(resolve, 700 * attempt));
+            }
+        }
+        throw lastError || new Error("Failed to load audio");
+    }
+
+    async function playVoiceAdvisory(cropId, region) {
+        const btn = document.getElementById('play-advisory-btn');
+        const icon = document.getElementById('audio-icon');
+        const textElement = document.getElementById('audio-text');
+        const audio = document.getElementById('advisory-audio');
+        
+        const lang = localStorage.getItem('preferred_language') || 'en';
+        const t = (key, fallback) => {
+            if (typeof window.marketPulseT === 'function') {
+                return window.marketPulseT(key, fallback, lang);
+            }
+            return fallback;
+        };
+        const speechLocaleMap = {
+            en: 'en-US',
+            sw: 'sw-UG',
+            lg: 'lg-UG',
+            rn: 'nyn-UG',
+            teo: 'teo-UG',
+            luo: 'ach-UG',
+        };
+        const localLangs = new Set(['lg', 'rn', 'teo', 'luo', 'sw']);
+        
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+        icon.className = 'fas fa-spinner fa-spin';
+        const originalText = textElement.innerText;
+        textElement.innerText = t('btn_loading_advisory', 'Loading...');
+        
+        try {
+            const data = await fetchVoiceAdvisory(cropId, region, lang, localLangs.has(lang) ? 3 : 1);
+            
+            if(data.status === 'success') {
+                audio.src = data.audio_url;
+                await audio.play();
+                
+                icon.className = 'fas fa-volume-up';
+                textElement.innerText = t('btn_playing_advisory', 'Playing...');
+                
+                audio.onended = () => {
+                    btn.disabled = false;
+                    btn.style.opacity = "1";
+                    textElement.innerText = originalText;
+                };
+            } else {
+                throw new Error(data.error || "Failed to load audio");
+            }
+        } catch(e) {
+            console.error(e);
+            if (localLangs.has(lang)) {
+                const localMsg = t(
+                    'alert_audio_failed_local',
+                    'Local language audio is temporarily unavailable. Please try again in a few seconds.'
+                );
+                if (window.MarketPulseOffline && typeof window.MarketPulseOffline.showToast === 'function') {
+                    window.MarketPulseOffline.showToast(localMsg, 'warning');
+                } else {
+                    alert(localMsg);
+                }
+
+                // Avoid server-side gTTS for local languages.
+                // Fall back to the browser's speech synthesis using localized text.
+                if (typeof speak === 'function') {
+                    const localizedVoiceText = (
+                        (detailData.voice_texts && detailData.voice_texts[lang]) ||
+                        (detailData.voice_texts && detailData.voice_texts.en) ||
+                        `${detailData.name} in ${detailData.market}. Current price ${detailData.current_price} Uganda shillings. Predicted price ${detailData.predicted_price} Uganda shillings.`
+                    );
+                    speak(localizedVoiceText, speechLocaleMap[lang] || 'en-US');
+                }
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                icon.className = 'fas fa-volume-up';
+                textElement.innerText = originalText;
+                return;
+            }
+            if (typeof speak === 'function') {
+                const localizedVoiceText = (
+                    (detailData.voice_texts && detailData.voice_texts[lang]) ||
+                    (detailData.voice_texts && detailData.voice_texts.en) ||
+                    `${detailData.name} in ${detailData.market}. Current price ${detailData.current_price} Uganda shillings. Predicted price ${detailData.predicted_price} Uganda shillings.`
+                );
+                speak(localizedVoiceText, speechLocaleMap[lang] || 'en-US');
+            } else {
+                alert(t('alert_audio_failed', 'Could not load audio advisory.'));
+            }
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            icon.className = 'fas fa-volume-up';
+            textElement.innerText = originalText;
+        }
+    }
+</script>
+{% endblock %}

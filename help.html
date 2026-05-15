@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="help-hero" style="margin-bottom: 40px;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 10px;" data-i18n="help_title">Help & Support</h1>
+        <p class="text-success" style="font-size: 1.1rem;" data-i18n="help_subtitle">We are here to help. Assistance is
+            available in your local
+            language.</p>
+
+        <div class="help-lang-row" style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+            <button
+                style="background: var(--bg-success-tint); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 50px; font-weight: 600; color: var(--text-dark); cursor: pointer; transition: var(--transition);">
+                <i class="fas fa-language"></i> Luganda</button>
+            <button
+                style="background: var(--bg-success-tint); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 50px; font-weight: 600; color: var(--text-dark); cursor: pointer; transition: var(--transition);">
+                <i class="fas fa-language"></i> Runyankole</button>
+            <button
+                style="background: var(--bg-success-tint); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 50px; font-weight: 600; color: var(--text-dark); cursor: pointer; transition: var(--transition);">
+                <i class="fas fa-language"></i> Ateso</button>
+            <button
+                style="background: var(--bg-success-tint); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 50px; font-weight: 600; color: var(--text-dark); cursor: pointer; transition: var(--transition);">
+                <i class="fas fa-language"></i> Luo</button>
+            <a href="/translation-qa"
+                style="background: rgba(52, 152, 219, 0.12); border: 1px solid rgba(52, 152, 219, 0.28); padding: 8px 16px; border-radius: 50px; font-weight: 600; color: var(--text-dark); text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-clipboard-check"></i> Translation QA Checklist
+            </a>
+        </div>
+    </div>
+
+    <h2 class="mb-2" data-i18n="help_get_help">Get Help Now</h2>
+    <div class="help-contact-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 50px;">
+        <div class="card" style="display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-color);">
+            <div
+                style="background: var(--bg-light); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color);">
+                <i class="fas fa-phone-alt color: var(--text-dark);"></i>
+            </div>
+            <div style="flex: 1;">
+                <div style="font-weight: 700;">+256 774 952895</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="call_desc">Call for immediate help
+                </div>
+            </div>
+            <div class="text-success" style="font-weight: 600; font-size: 0.9rem;" data-i18n="btn_call_now">Call Now
+            </div>
+        </div>
+        <div class="card" style="display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-color);">
+            <div
+                style="background: var(--bg-light); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color);">
+                <i class="fas fa-comment-alt color: var(--text-dark);"></i>
+            </div>
+            <div style="flex: 1;">
+                <div style="font-weight: 700;">+256 774 952895</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="sms_desc">Send us an SMS</div>
+            </div>
+            <div class="text-success" style="font-weight: 600; font-size: 0.9rem;" data-i18n="btn_sms_now">SMS Now</div>
+        </div>
+        <div class="card" style="display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-color);">
+            <div
+                style="background: var(--bg-light); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color);">
+                <i class="fas fa-envelope color: var(--text-dark);"></i>
+            </div>
+            <div style="flex: 1;">
+                <div style="font-weight: 700; font-size: 0.9rem;">support@marketpulse.ug</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="email_desc">Email us your query
+                </div>
+            </div>
+            <div class="text-success" style="font-weight: 600; font-size: 0.9rem;" data-i18n="btn_email_us">Email Us
+            </div>
+        </div>
+    </div>
+
+    <div class="help-lower-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+        <div>
+            <h2 class="mb-2" data-i18n="msg_title">Send us a Message</h2>
+            <form>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px;"
+                        data-i18n="label_name">Name</label>
+                    <input type="text" placeholder="Enter your full name"
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-dark);"
+                        data-i18n="ph_name">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px;" data-i18n="label_contact">Phone
+                        Number or Email</label>
+                    <input type="text" placeholder="Your phone or email"
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-dark);"
+                        data-i18n="ph_contact">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px;" data-i18n="label_message">Your
+                        Message</label>
+                    <textarea placeholder="How can we help you today?" rows="5"
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-dark);"
+                        data-i18n="ph_message"></textarea>
+                </div>
+                <button type="button" class="btn-primary" style="width: 100%;" data-i18n="btn_send_msg">Send
+                    Message</button>
+            </form>
+        </div>
+
+        <div>
+            <h2 class="mb-2" data-i18n="faq_title">Frequently Asked Questions</h2>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="card"
+                    style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                    <span style="font-weight: 600;" data-i18n="faq_1">How do I check the price of maize?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="card"
+                    style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                    <span style="font-weight: 600;" data-i18n="faq_2">What do the colors in the price trend mean?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="card"
+                    style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                    <span style="font-weight: 600;" data-i18n="faq_3">How do I change my market location?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="card"
+                    style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                    <span style="font-weight: 600;" data-i18n="faq_4">I forgot my password. What do I do?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

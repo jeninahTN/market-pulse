@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="dashboard-hero" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div>
+            {% if is_new_user %}
+            <h1 style="font-size: 2.5rem; margin-bottom: 5px;"><span data-i18n="text_welcome">Welcome</span>, {{ username }}!</h1>
+            <p class="text-success" style="font-weight: 500;" data-i18n="msg_get_started">Get started by predicting your first crop price.</p>
+            {% else %}
+            <h1 style="font-size: 2.5rem; margin-bottom: 5px;"><span data-i18n="text_welcome_back">Welcome back</span>, {{ username }}!</h1>
+            <p class="text-success" style="font-weight: 500;" data-i18n="latest_predictions">Here are your latest price predictions</p>
+            {% endif %}
+        </div>
+        <div class="dashboard-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn-primary" onclick="window.location.href='/predict-form'">
+                <i class="fas fa-plus"></i> <span data-i18n="btn_new_prediction">Get New Price Prediction</span>
+            </button>
+            <form id="refresh-form" action="/refresh-now" method="post" style="margin: 0;">
+                <button type="submit" class="btn-primary" id="refresh-btn" style="background: var(--bg-light); color: var(--text-dark); border: 1px solid var(--border-color);">
+                    <i class="fas fa-arrows-rotate" id="refresh-icon"></i> 
+                    <span id="refresh-text" data-i18n="btn_refresh_data">Refresh Data</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if is_new_user %}
+    <div style="text-align: center; padding: 60px 20px; background: var(--bg-white); border-radius: 16px; margin-bottom: 40px; border: 2px dashed var(--border-color); color: var(--text-dark);">
+        <i class="fas fa-seedling text-success" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+        <h2 style="margin-bottom: 10px; color: var(--text-dark);" data-i18n="msg_no_predictions">No predictions yet</h2>
+        <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto 20px auto;" data-i18n="msg_no_predictions_desc">You haven't monitored any crops or requested any price forecasts yet. Click the button above to start your first prediction.</p>
+    </div>
+    {% else %}
+    <h2 class="mb-2" data-i18n="header_monitored_crops">My Monitored Crops</h2>
+
+    <div class="crop-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; margin-bottom: 40px;">
+        {% for crop in crops %}
+        <a href="/detail/{{ crop.id }}/{{ crop.region }}" class="card"
+            data-offline-detail="1"
+            data-crop-id="{{ crop.id }}"
+            data-region="{{ crop.region }}"
+            style="padding: 0; overflow: hidden; display: block;">
+            <div style="height: 160px; overflow: hidden;">
+                <img src="{{ crop.image }}" alt="{{ crop.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div style="padding: 20px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 5px;" data-i18n="crop_{{ crop.id | lower }}">{{ crop.name }}</h3>
+                <div style="color: var(--primary); font-weight: 700; font-size: 1.1rem;">{{ crop.price }} {{ crop.unit }}</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">{{ crop.freshness_label }}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="color: var(--text-muted); font-size: 0.9rem;"><span data-i18n="text_for">for</span> <span data-i18n="market_{{ crop.region | lower }}">{{ crop.market }}</span></div>
+                    <a href="/delete-prediction/{{ crop.id }}/{{ crop.region }}" 
+                       style="color: #e74c3c; font-size: 0.8rem; font-weight: 600; text-decoration: none;"
+                       onclick="event.stopPropagation();" data-i18n="btn_remove">Remove</a>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 data-i18n="header_recent_activity">Recent Activity</h2>
+        <a href="/history" class="text-success" style="font-weight: 600;" data-i18n="link_view_all">View All History</a>
+    </div>
+
+    <div class="activity-list" style="display: flex; flex-direction: column; gap: 16px;">
+        {% for crop in crops %}
+        <div class="card activity-row" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+            <div>
+                <h3 style="font-size: 1rem;"><span data-i18n="crop_{{ crop.id | lower }}">{{ crop.name }}</span> <span data-i18n="text_in">in</span> <span data-i18n="market_{{ crop.region | lower }}">{{ crop.region|capitalize }}</span></h3>
+                <div style="color: var(--text-muted); font-size: 0.9rem;" data-i18n="label_predicted_price">Predicted
+                    Price</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">{{ crop.freshness_label }}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="color: var(--primary); font-weight: 700; font-size: 1.2rem;">{{ crop.price }} {{ crop.unit
+                    }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="quick-menu-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 50px;">
+        <div class="card clickable-card" style="text-align: center; background-color: var(--bg-light); border: 1px solid var(--border-color); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" 
+             onclick="showMyCrops()">
+            <i class="fas fa-seedling text-success" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
+            <div style="font-weight: 600;" data-i18n="menu_my_crops">My Crops</div>
+        </div>
+        <div class="card clickable-card" style="text-align: center; background-color: var(--bg-light); border: 1px solid var(--border-color); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" 
+             onclick="showMyLocations()">
+            <i class="fas fa-map-marker-alt text-success" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
+            <div style="font-weight: 600;" data-i18n="menu_locations">My Locations</div>
+        </div>
+        <div class="card clickable-card" style="text-align: center; background-color: var(--bg-light); border: 1px solid var(--border-color); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" 
+             onclick="showPredictionHistory()">
+            <i class="fas fa-history text-success" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
+            <div style="font-weight: 600;" data-i18n="menu_history">Prediction History</div>
+        </div>
+        <div class="card clickable-card" style="text-align: center; background-color: var(--bg-light); border: 1px solid var(--border-color); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" 
+             onclick="showSettings()">
+            <i class="fas fa-cog text-success" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
+            <div style="font-weight: 600;" data-i18n="menu_settings">Settings</div>
+        </div>
+    </div>
+</div>
+<script id="dashboard-snapshots" type="application/json">
+    {{ detail_snapshots | tojson | safe }}
+</script>
+
+<script>
+// Dashboard button functions
+function showMyCrops() {
+    // Filter and show only crops section
+    const cropsSection = document.querySelector('.crop-grid');
+    const activitySection = document.querySelector('.activity-list');
+    const quickMenu = document.querySelector('.quick-menu-grid');
+    
+    if (cropsSection) {
+        cropsSection.scrollIntoView({ behavior: 'smooth' });
+        cropsSection.style.animation = 'pulse 0.5s ease-in-out';
+        setTimeout(() => cropsSection.style.animation = '', 500);
+    }
+    
+    // Show toast
+    showToast('Showing your monitored crops', 'info');
+}
+
+function showMyLocations() {
+    // Extract unique locations from crops
+    const crops = JSON.parse(document.getElementById('dashboard-snapshots').textContent || '{}');
+    const locations = new Set();
+    
+    Object.values(crops).forEach(crop => {
+        if (crop.region) {
+            locations.add(crop.region);
+        }
+    });
+    
+    // Create modal to show locations
+    const modal = createLocationModal(Array.from(locations));
+    document.body.appendChild(modal);
+}
+
+function showPredictionHistory() {
+    // Navigate to history page
+    window.location.href = '/history';
+}
+
+function showSettings() {
+    // Create settings modal
+    const modal = createSettingsModal();
+    document.body.appendChild(modal);
+}
+
+function createLocationModal(locations) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: var(--bg-white);
+        border-radius: 16px;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+    `;
+    
+    content.innerHTML = `
+        <h2 style="margin-bottom: 20px; color: var(--text-dark);">
+            <i class="fas fa-map-marker-alt" style="color: var(--primary); margin-right: 10px;"></i>
+            My Locations
+        </h2>
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            ${locations.map(location => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--bg-light); border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-dark);">${location}</div>
+                        <div style="font-size: 0.9rem; color: var(--text-muted);">Market Location</div>
+                    </div>
+                    <i class="fas fa-map-pin" style="color: var(--primary);"></i>
+                </div>
+            `).join('')}
+        </div>
+        <button onclick="this.closest('.modal').remove()" style="margin-top: 20px; width: 100%;" class="btn-primary">
+            Close
+        </button>
+    `;
+    
+    modal.appendChild(content);
+    modal.className = 'modal';
+    
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+    
+    return modal;
+}
+
+function createSettingsModal() {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: var(--bg-white);
+        border-radius: 16px;
+        padding: 30px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+    `;
+    
+    content.innerHTML = `
+        <h2 style="margin-bottom: 20px; color: var(--text-dark);">
+            <i class="fas fa-cog" style="color: var(--primary); margin-right: 10px;"></i>
+            Settings
+        </h2>
+        
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div>
+                <h3 style="margin-bottom: 10px; color: var(--text-dark);">Notification Preferences</h3>
+                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <input type="checkbox" id="price-alerts" checked>
+                    <span>Price change alerts</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <input type="checkbox" id="daily-summaries" checked>
+                    <span>Daily price summaries</span>
+                </label>
+            </div>
+            
+            <div>
+                <h3 style="margin-bottom: 10px; color: var(--text-dark);">Data Settings</h3>
+                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <input type="checkbox" id="auto-refresh" checked>
+                    <span>Auto-refresh data</span>
+                </label>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <label for="refresh-interval">Refresh interval:</label>
+                    <select id="refresh-interval" style="padding: 5px; border-radius: 4px; border: 1px solid var(--border-color);">
+                        <option value="5">5 minutes</option>
+                        <option value="15" selected>15 minutes</option>
+                        <option value="30">30 minutes</option>
+                        <option value="60">1 hour</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div>
+                <h3 style="margin-bottom: 10px; color: var(--text-dark);">Account</h3>
+                <button onclick="exportData()" style="margin-bottom: 10px; width: 100%;" class="btn-primary" style="background: var(--bg-light); color: var(--text-dark); border: 1px solid var(--border-color);">
+                    <i class="fas fa-download"></i> Export My Data
+                </button>
+                <button onclick="clearCache()" style="width: 100%;" class="btn-primary" style="background: #e74c3c;">
+                    <i class="fas fa-trash"></i> Clear Cache
+                </button>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button onclick="saveSettings()" class="btn-primary">
+                <i class="fas fa-save"></i> Save Settings
+            </button>
+            <button onclick="this.closest('.modal').remove()" class="btn-primary" style="background: var(--bg-light); color: var(--text-dark); border: 1px solid var(--border-color);">
+                Cancel
+            </button>
+        </div>
+    `;
+    
+    modal.appendChild(content);
+    modal.className = 'modal';
+    
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+    
+    return modal;
+}
+
+function saveSettings() {
+    const settings = {
+        priceAlerts: document.getElementById('price-alerts').checked,
+        dailySummaries: document.getElementById('daily-summaries').checked,
+        autoRefresh: document.getElementById('auto-refresh').checked,
+        refreshInterval: document.getElementById('refresh-interval').value
+    };
+    
+    localStorage.setItem('marketPulseSettings', JSON.stringify(settings));
+    showToast('Settings saved successfully!', 'success');
+    document.querySelector('.modal').remove();
+}
+
+function exportData() {
+    // Export user data (mock implementation)
+    const data = {
+        crops: JSON.parse(document.getElementById('dashboard-snapshots').textContent || '{}'),
+        exportDate: new Date().toISOString(),
+        version: '1.0'
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'market-pulse-data.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('Data exported successfully!', 'success');
+}
+
+function clearCache() {
+    if (confirm('Are you sure you want to clear all cached data? This action cannot be undone.')) {
+        localStorage.clear();
+        sessionStorage.clear();
+        showToast('Cache cleared successfully!', 'success');
+        setTimeout(() => window.location.reload(), 1000);
+    }
+}
+
+// Add hover effect for clickable cards
+document.addEventListener('DOMContentLoaded', function() {
+    const clickableCards = document.querySelectorAll('.clickable-card');
+    clickableCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+
+    // Handle refresh form submission
+    const refreshForm = document.getElementById('refresh-form');
+    if (refreshForm) {
+        refreshForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleRefresh();
+        });
+    }
+});
+
+function handleRefresh() {
+    const refreshBtn = document.getElementById('refresh-btn');
+    const refreshIcon = document.getElementById('refresh-icon');
+    const refreshText = document.getElementById('refresh-text');
+    
+    if (!refreshBtn || !refreshIcon || !refreshText) return;
+    
+    // Show loading state
+    refreshBtn.disabled = true;
+    refreshIcon.className = 'fas fa-spinner fa-spin';
+    refreshText.textContent = 'Refreshing...';
+    
+    // Submit form via fetch
+    fetch('/refresh-now', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'started') {
+            showToast('Data refresh started in background', 'info');
+            // Check progress periodically
+            checkRefreshProgress();
+        } else if (data.status === 'busy') {
+            showToast('Refresh already in progress', 'warning');
+        } else {
+            showToast('Refresh failed: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Refresh error:', error);
+        showToast('Refresh failed', 'error');
+    })
+    .finally(() => {
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            refreshBtn.disabled = false;
+            refreshIcon.className = 'fas fa-arrows-rotate';
+            refreshText.textContent = 'Refresh Data';
+        }, 2000);
+    });
+}
+
+function checkRefreshProgress() {
+    // Check refresh status every 5 seconds for up to 2 minutes
+    let attempts = 0;
+    const maxAttempts = 24; // 24 * 5 seconds = 2 minutes
+    
+    const checkInterval = setInterval(() => {
+        attempts++;
+        
+        // Simple progress indicator based on attempts
+        const progress = Math.min((attempts / maxAttempts) * 100, 95);
+        
+        if (attempts >= maxAttempts) {
+            clearInterval(checkInterval);
+            showToast('Refresh taking longer than expected', 'warning');
+            return;
+        }
+        
+        // Could add actual progress checking here if needed
+        // For now, just show that it's still running
+        
+    }, 5000);
+}
+</script>
+{% endblock %}
